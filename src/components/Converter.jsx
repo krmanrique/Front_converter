@@ -5,7 +5,7 @@ const optionByConverter = {
   time: ["seconds", "minutes", "hours", "days", "weeks", "months", "years"],
   temperature: ["celsius", "fahrenheit", "kelvin"],
   money: ["cop", "usd", "eur"],
-  units: ["gramos", "kilos", "libra"],
+  units: ["gramos", "kilos", "libras"],
 };
 
 export default function App() {
