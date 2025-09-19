@@ -1,112 +1,119 @@
 import React, { useEffect, useState } from "react";
-import '../styles/Converter.css';
+import "../styles/Converter.css";
 
 const optionByConverter = {
-  time: ['seconds', 'minutes', 'hours', 'days', 'weeks', 'months', 'years'],
-  temperature: ['celsius', 'fahrenheit', 'kelvin'],
-  money: ['cop', 'usd', 'eur'],
-  units: ['gramos', 'kilos', 'libra']
+  time: ["seconds", "minutes", "hours", "days", "weeks", "months", "years"],
+  temperature: ["celsius", "fahrenheit", "kelvin"],
+  money: ["cop", "usd", "eur"],
+  units: ["gramos", "kilos", "libra"],
 };
 
 export default function App() {
-  const [converter, setConverter] = useState('time');
-  const [from, setFrom] = useState('seconds'); // 👈 renombrado
-  const [to, setTo] = useState('seconds');     // 👈 renombrado
-  const [value, setValue] = useState('');
-  const [converterOption2, setConverterOption2] = useState([]);
-  const [resultado, setResultado] = useState('');
+  const [converter, setConverter] = useState("time");
+  const [from, setFrom] = useState("seconds");
+  const [to, setTo] = useState("seconds");
+  const [value, setValue] = useState("");
+  const [options, setOptions] = useState(optionByConverter["time"]);
+  const [resultado, setResultado] = useState("");
 
-  // Al cambiar el tipo de conversión, actualizamos las opciones disponibles
+  // Cuando cambie el tipo de conversión, actualizamos las opciones
   useEffect(() => {
-    setConverterOption2(optionByConverter[converter]);
+    const newOptions = optionByConverter[converter];
+    setOptions(newOptions);
+    setFrom(newOptions[0]);
+    setTo(newOptions[0]);
   }, [converter]);
 
   // Manejo de la solicitud de conversión
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    fetch(`http://localhost:3500/v1/converter/${converter}`, {
-      method: 'POST',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from,   // 👈 ahora enviamos from
-        to,     // 👈 ahora enviamos to
-        value
-      })
-    })
-      .then(async res => {
-        if (!res.ok) {
-          throw new Error(`Error en la API: ${res.status}`);
-        }
-        const responseData = await res.json();
-        console.log('Respuesta del servidor:', responseData);
-        return responseData;
-      })
-      .then(responseData => {
-        setResultado(responseData.resultado);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        setResultado('Hubo un error al realizar la conversión.');
+
+    try {
+      const res = await fetch(`http://localhost:3500/v1/converter/${converter}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from,
+          to,
+          value,
+        }),
       });
+
+      if (!res.ok) {
+        throw new Error(`Error en la API: ${res.status}`);
+      }
+
+      const responseData = await res.json();
+      console.log("Respuesta del servidor:", responseData);
+
+      setResultado(responseData.resultado);
+    } catch (error) {
+      console.error("Error:", error);
+      setResultado("Hubo un error al realizar la conversión.");
+    }
   }
 
   return (
-    <div className='app'>
+    <div className="app">
       <h1>Convertidor General</h1>
-      <form onSubmit={handleSubmit}>
+
+      <form onSubmit={handleSubmit} className="converter-form">
         {/* Seleccionar tipo de conversión */}
-        <select 
-          value={converter}
-          onChange={event => setConverter(event.target.value)}
-        >
-          {Object.keys(optionByConverter).map(option => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <br />
-        
+        <label>
+          Tipo de conversión:
+          <select value={converter} onChange={(e) => setConverter(e.target.value)}>
+            {Object.keys(optionByConverter).map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {/* Selección de opción "from" */}
-        from
-        <select 
-          value={from}
-          onChange={event => setFrom(event.target.value)}
-        >
-          {converterOption2.map(option => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <br />
-      
+        <label>
+          De:
+          <select value={from} onChange={(e) => setFrom(e.target.value)}>
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {/* Selección de opción "to" */}
-        to
-        <select 
-          value={to}
-          onChange={event => setTo(event.target.value)}
-        >
-          {converterOption2.map(option => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <br />
-        
+        <label>
+          A:
+          <select value={to} onChange={(e) => setTo(e.target.value)}>
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {/* Campo de entrada para el valor */}
-        <input 
-          type="number" 
-          value={value} 
-          onChange={e => setValue(e.target.value)} 
-        />
-        <br/>
-        
+        <label>
+          Valor:
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            required
+          />
+        </label>
+
         <button type="submit">Enviar</button>
       </form>
 
-      {resultado && <div>Resultado: {resultado}</div>}
+      {/* Resultado */}
+      {resultado && (
+        <div className="resultado">
+          <strong>Resultado:</strong> {resultado}
+        </div>
+      )}
     </div>
   );
 }
